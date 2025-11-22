@@ -26,6 +26,7 @@ Configuration parameters:
  - Auction time.
  - Liquidity migration time.
  - Lock time.
+ - Snapshot lookup time.
 
 ### Betting
 
