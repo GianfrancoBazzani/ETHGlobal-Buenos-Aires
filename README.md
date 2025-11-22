@@ -11,7 +11,7 @@ Anyone can create a vampire attack pool specifying the VA Pool configuration par
 Protocol steps:
  - VA Pool creation.
  - Betting period.
- - Liquidity migration.
+ - Liquidity migration period.
  - Liquidity locking period.
  - Rewards distribution.
 
@@ -20,7 +20,6 @@ Protocol steps:
 Configuration parameters:
  - Attacker protocol (address of bleeth.me router for the specific protocol).
  - Victim protocol (address of bleeth.me router for the specific protocol).
- - Tokens list (tokens involved in the vampire attack).
  - Reward token list (tokens given as reward).
  - Penalization coeficient.
  - Auction time.
@@ -51,7 +50,7 @@ Liquidity Pro: Actors that held liquidity.
 
 ### Rewards Distribution
 
-The rewards are distributed using a rewards Synthetix like rewards distribution algorithm.
+Rewards are distributed during liquidity locking period only to users that use the migrated liquidity in the destination protocol using a rewards Synthetix like rewards distribution algorithm.
 
 ## Contracts
 
