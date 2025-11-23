@@ -66,7 +66,7 @@ In order to prevent **sniping** (Last-minute bidding), the betting period finali
 
 ### Liquidity Migration
 
-Users can migrate the liquidity to the migration protocol once the betting period has been finalized. In order to allow only users that where actually providing liquidity to the original protocol the average liquidity during a certain period previous to the initialization of the VAPool of the users is snapshooted and calculated using The Graph Amp datasets. The amp used amp queries can be found on [amp](./amp/) folder.
+Users can migrate the liquidity to the migration protocol once the betting period has been finalized. In order to allow only users that where actually providing liquidity to the original protocol the average liquidity during a certain period previous to the initialization of the VAPool of the users is snapshooted and calculated using The Graph Amp datasets. The amp used amp queries can be found on [amp](./amp/) folder. More information about the AMP implementation can be found in [README](./amp/README.md)
  
 A merkle three is computed off chain with all positions and the root of this is submitted to the contracts by a trusted relayer, in order to be able to migrate the liquidity the users have to prove that they had liquidity in the origin protocol, by submitting a merkle inclusion proof to the core contract.
 
