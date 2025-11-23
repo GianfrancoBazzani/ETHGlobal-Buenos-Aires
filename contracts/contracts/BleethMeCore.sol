@@ -99,9 +99,16 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
 
     function finalizeBetting(uint256 vaPoolId) external payable {
         require(block.timestamp >= vaPools[vaPoolId].auctionEndTimestamp, "not finalized");
-        uint128 requestFee = entropy.getFeeV2();
-        if (msg.value < requestFee) revert("not enough fees");
-        randomnessMapping[entropy.requestV2{ value: requestFee }()] = vaPoolId;
+        if(vaPools[vaPoolId].invalidatableBetters.length != 0){
+            uint128 requestFee = entropy.getFeeV2();
+            if (msg.value < requestFee) revert("not enough fees");
+            randomnessMapping[entropy.requestV2{ value: requestFee }()] = vaPoolId;
+        } else {
+            Bet memory winnerBet;   // todo: determine winnerBet
+            _processWinningSide(vaPoolId, winnerBet);
+            vaPools[vaPoolId].state = VAPoolState.MIGRATION;
+        }
+        
     }
 
     function entropyCallback(
@@ -110,6 +117,17 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
         bytes32 randomNumber
     ) internal override {
         uint256 vaPoolId = randomnessMapping[sequenceNumber];
+
+        uint256 finalAuctionEndTimestamp = vaPools[vaPoolId].auctionEndTimestamp - (uint256(randomNumber) % INVALIDATION_WINDOW);
+        Bet memory winnerBet;
+        for(uint256 i = vaPools[vaPoolId].invalidatableBetters.length; i >= 0; i--){
+            if(vaPools[vaPoolId].invalidatableBetters[i].timestamp < finalAuctionEndTimestamp){
+                winnerBet = vaPools[vaPoolId].invalidatableBetters[i];
+                break;
+            }
+        }
+        _processWinningSide(vaPoolId, winnerBet);
+        vaPools[vaPoolId].state = VAPoolState.MIGRATION;
     }
 
     function getEntropy() internal view override returns (address) {
@@ -165,6 +183,10 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
         token.transferFrom(msg.sender, address(this), amount);
 
         emit BetPlaced(bytes32(vaPoolId), msg.sender);
+    }
+
+    function _processWinningSide(uint256 vaPoolId, Bet memory winningBet) internal {
+
     }
 
 }
