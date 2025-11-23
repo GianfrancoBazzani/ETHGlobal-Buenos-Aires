@@ -5,6 +5,8 @@ import {IBleethMeCore} from "./interfaces/IBleethMeCore.sol";
 import {IBaseAdapter} from "./interfaces/IBaseAdapter.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import "@pythnetwork/entropy-sdk-solidity/IEntropyV2.sol";
+import "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
 
 contract BleethMeCore is IBleethMeCore, Ownable {
 
@@ -69,6 +71,11 @@ contract BleethMeCore is IBleethMeCore, Ownable {
 
     function placeBet(uint256 vaPoolId, Bet memory bet) external {
         _placeBet(vaPoolId, bet);
+    }
+
+    function finalizeBetting(uint256 vaPoolId) external {
+        require(block.timestamp >= vaPools[vaPoolCount].auctionEndTimestamp, "not finalized");
+
     }
     
     // View functions
