@@ -1,0 +1,262 @@
+{
+  "_format": "hh3-artifact-1",
+  "contractName": "IBleethMeCore",
+  "sourceName": "contracts/interfaces/IBleethMeCore.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "BettingPeriodClosed",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InsufficientBetAmount",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "RewardTokenNotWhitelisted",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "poolId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "BetPlaced",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "bool",
+          "name": "status",
+          "type": "bool"
+        }
+      ],
+      "name": "RewardTokenWhitelisted",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "poolId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "attacker",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "victim",
+          "type": "address"
+        }
+      ],
+      "name": "VAPoolCreated",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract IBaseAdapter",
+          "name": "attacker",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IBaseAdapter",
+          "name": "victim",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IERC20[]",
+          "name": "rewardTokens",
+          "type": "address[]"
+        },
+        {
+          "internalType": "uint256",
+          "name": "penalizationCoefficient",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "auctionDuration",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "liquidityMigrationDelay",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "lockDuration",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "snapshotLookupTime",
+          "type": "uint256"
+        },
+        {
+          "components": [
+            {
+              "internalType": "enum IBleethMeCore.BetSide",
+              "name": "side",
+              "type": "uint8"
+            },
+            {
+              "internalType": "contract IERC20",
+              "name": "token",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IBleethMeCore.Bet",
+          "name": "initialBet",
+          "type": "tuple"
+        }
+      ],
+      "name": "createVaPool",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "poolId",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "vaPoolId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "better",
+          "type": "address"
+        }
+      ],
+      "name": "getBet",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "enum IBleethMeCore.BetSide",
+              "name": "side",
+              "type": "uint8"
+            },
+            {
+              "internalType": "contract IERC20",
+              "name": "token",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IBleethMeCore.Bet",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "vaPoolId",
+          "type": "uint256"
+        },
+        {
+          "components": [
+            {
+              "internalType": "enum IBleethMeCore.BetSide",
+              "name": "side",
+              "type": "uint8"
+            },
+            {
+              "internalType": "contract IERC20",
+              "name": "token",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IBleethMeCore.Bet",
+          "name": "bet",
+          "type": "tuple"
+        }
+      ],
+      "name": "placeBet",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract IERC20",
+          "name": "token",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "status",
+          "type": "bool"
+        }
+      ],
+      "name": "setWhitelistRewardToken",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "immutableReferences": {},
+  "inputSourceName": "project/contracts/interfaces/IBleethMeCore.sol",
+  "buildInfoId": "solc-0_8_28-935cbe97b79c04f556c9edd9bbb41312f77af316"
+}

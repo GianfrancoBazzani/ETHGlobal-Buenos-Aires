@@ -21,17 +21,16 @@ contract BleethMeCoreTest is Test {
     MockAdapter victimAdapter;
     MockEntropy mockEntropy;
 
-    address constant OWNER = address(0xABCD);    
+    address constant OWNER = address(0xABCD);
+    address constant USER1 = address(0x1111);
 
     function setUp() public {
-
         
         // Deploy mock ERC20 token for testing
         rewardTokenA = new MockERC20("Reward Token A", "RTA", OWNER);
         rewardTokenB = new MockERC20("Reward Token B", "RTB", OWNER);
         liquidityTokenA = new MockERC20("Liquidity Token A", "LTA", OWNER);
         liquidityTokenB = new MockERC20("Liquidity Token B", "LTB", OWNER);  
-        
         
         // Deploy mock adapters
         attackerAdapter = new MockAdapter(address(bleethMeCore));
@@ -51,6 +50,7 @@ contract BleethMeCoreTest is Test {
     
 
     function test_VaPoolCreation() public {
+        vm.startPrank(USER1);
         
        
     }

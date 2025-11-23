@@ -1,0 +1,27 @@
+{
+  "_format": "hh3-artifact-1",
+  "contractName": "MockEntropy",
+  "sourceName": "contracts/tests/mocks/MockEntropy.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "requestV2",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "requestId",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080604052348015600e575f5ffd5b5060af80601a5f395ff3fe6080604052348015600e575f5ffd5b50600436106026575f3560e01c80637b43155d14602a575b5f5ffd5b60306044565b604051603b91906062565b60405180910390f35b5f6001905090565b5f819050919050565b605c81604c565b82525050565b5f60208201905060735f8301846055565b9291505056fea2646970667358221220fe14b6d30954d39ba8c029f644cbbf6420f823afacca8cc4052af244f3ab803064736f6c634300081c0033",
+  "deployedBytecode": "0x6080604052348015600e575f5ffd5b50600436106026575f3560e01c80637b43155d14602a575b5f5ffd5b60306044565b604051603b91906062565b60405180910390f35b5f6001905090565b5f819050919050565b605c81604c565b82525050565b5f60208201905060735f8301846055565b9291505056fea2646970667358221220fe14b6d30954d39ba8c029f644cbbf6420f823afacca8cc4052af244f3ab803064736f6c634300081c0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "immutableReferences": {},
+  "inputSourceName": "project/contracts/tests/mocks/MockEntropy.sol",
+  "buildInfoId": "solc-0_8_28-c0802465af375977ba858ae6a942db85719adb6e"
+}
