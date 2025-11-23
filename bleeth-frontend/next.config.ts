@@ -1,14 +1,10 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  webpack: (config) => {
-    // Exclude test files from node_modules
-    config.module.rules.push({
-      test: /node_modules\/.*\/test\/.*/,
-      use: 'null-loader',
-    });
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  webpack: (config:any) => {
+    config.externals.push('pino-pretty', 'lokijs', 'encoding');
     return config;
   },
 };
 
-export default nextConfig;
+module.exports = nextConfig;

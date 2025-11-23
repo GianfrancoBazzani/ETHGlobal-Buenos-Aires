@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import PageSelector from "@/components/PageSelector";
-import Attack from "@/components/Attack";
-import Pots from "@/components/Pots";
+import PageSelector from "../components/PageSelector";
+import Attack from "../components/Attack";
+import Pots from "../components/Pots";
 
 export default function Home() {
   const [currentView, setCurrentView] = useState<"default" | "attack" | "pots">("default");
