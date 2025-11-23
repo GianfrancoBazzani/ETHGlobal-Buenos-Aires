@@ -40,6 +40,7 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
     uint256 constant MINIMUM_INITIAL_BET = 0;
     uint256 constant INVALIDATION_WINDOW = 1 hours;
     uint256 constant PENALIZATION_BPS = 100_00;
+    uint256 constant MAX_PRICE_AGE = 1 minutes;
 
     mapping(uint256 => VAPool) public vaPools;
     mapping(uint256 => VAStream) public vaStreams;
@@ -202,8 +203,20 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
     }
 
     function _computeRewards(uint256 vaPoolId) internal view returns (uint256) {
-        bytes32 priceFeedId = 0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace; // ETH/USD
-        PythStructs.Price memory price = pyth.getPriceNoOlderThan(priceFeedId, 60);
+        address[] memory rewardTokens = getWhitelistedRewardTokens();
+        
+        uint256 totalValueFor = 0;
+        uint256 totalValueAgainst = 0;
+
+        uint256 length = rewardTokens.length;
+        for (uint256 i = 0; i < length; i++) {
+            if (vaPools[vaPoolId].rewardTokens[IERC20(rewardTokens[i])]) {
+                bytes32 priceFeedId = whitelistedRewardTokens.get(rewardTokens[i]); 
+                PythStructs.Price memory price = pyth.getPriceNoOlderThan(priceFeedId, MAX_PRICE_AGE);
+
+            }
+        }
+
         // TODO
     }
 }
