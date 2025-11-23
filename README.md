@@ -2,7 +2,8 @@
 
 ![Bleeth Logo](./Bleeth.png)
 
-Protocol that allows the creation of liquidity vampire attack on other protocols by incentivizing users with rewards if they migrate from a victim protocol to an attacker one. In exchange, users have to lock their liquidity for a certain period of time in order to obtain liquidity provision that cannot be considered mercenary liquidity.
+Bleeth.me is a cornerstone protocol that systematizes the DeFi liquidity wars while enabling DeFi protocols to reduce their reliance on mercenary liquidity. Its core mechanic is built around Vampire Attack (VA) Pools. A VA Pool can be created permissionlessly by anyone to initiate a deliberately targeted liquidity-stealing attack against a competitor protocol. Additionally, to protect against mercenary liquidity, a configurable lockup period can be specified to ensure that the funds remain deposited as liquidity in the destination protocol for a predetermined amount of time.
+
 
 ## Protocol Specification
 
