@@ -119,7 +119,7 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
             token.transfer(msg.sender, amount);
             emit WithdrawFailedBet(msg.sender, address(token), amount);
         } else {
-            revert();
+            revert InvalidWithdrawal();
         }        
     }
 

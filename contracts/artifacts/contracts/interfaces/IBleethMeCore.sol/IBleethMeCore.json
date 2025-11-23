@@ -45,6 +45,11 @@
     },
     {
       "inputs": [],
+      "name": "InvalidWithdrawal",
+      "type": "error"
+    },
+    {
+      "inputs": [],
       "name": "NotEnoughLiquidityExtracted",
       "type": "error"
     },
@@ -571,5 +576,5 @@
   "deployedLinkReferences": {},
   "immutableReferences": {},
   "inputSourceName": "project/contracts/interfaces/IBleethMeCore.sol",
-  "buildInfoId": "solc-0_8_28-6866c8220fdd6e1436d319693dbefd562843d639"
+  "buildInfoId": "solc-0_8_28-cb9775ef80a14755cb96e3f5c72f2b38dbe9341f"
 }

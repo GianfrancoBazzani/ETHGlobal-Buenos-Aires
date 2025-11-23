@@ -45,6 +45,7 @@ interface IBleethMeCore {
     error PositionMerkleTreeNotSet();
     error InvalidPositionVerification();
     error NotEnoughLiquidityExtracted();
+    error InvalidWithdrawal();
     error BetAlreadyPlaced();
 
     function createVaPool(
