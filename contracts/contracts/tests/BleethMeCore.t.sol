@@ -7,6 +7,7 @@ import {MockEntropy} from "./mocks/MockEntropy.sol";
 import {MockERC20} from "./mocks/MockERC20.sol";
 import {MockAdapter} from "./mocks/MockAdapter.sol";
 
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract BleethMeCoreTest is Test {
     // Contracts
@@ -50,8 +51,16 @@ contract BleethMeCoreTest is Test {
     
 
     function test_VaPoolCreation() public {
-        vm.startPrank(USER1);
+
+        IERC20[] memory rewardTokens = new IERC20[](2);    
+        rewardTokens[0] = rewardTokenA;
+        rewardTokens[1] = rewardTokenB;    
         
+
+        vm.startPrank(USER1);
+        bleethMeCore.createVaPool(
+            
+        );
        
     }
 }

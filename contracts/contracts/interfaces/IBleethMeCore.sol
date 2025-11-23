@@ -22,6 +22,7 @@ interface IBleethMeCore {
         BetSide side;
         IERC20 token;
         uint256 amount;
+        uint256 timestamp;
     }
 
     event VAPoolCreated(bytes32 indexed poolId, address indexed attacker, address indexed victim);
@@ -41,10 +42,11 @@ interface IBleethMeCore {
         uint256 liquidityMigrationDelay,
         uint256 lockDuration,
         uint256 snapshotLookupTime,
-        Bet memory initialBet
+        IERC20 initialBetToken,
+        uint256 initialBetAmount
     ) external returns (bytes32 poolId);
 
-    function placeBet(uint256 vaPoolId, Bet memory bet) external;
+    function placeBet(uint256 vaPoolId, BetSide side, IERC20 token, uint256 amount) external;
     
     function getBet(uint256 vaPoolId, address better) external view returns (Bet memory);
 

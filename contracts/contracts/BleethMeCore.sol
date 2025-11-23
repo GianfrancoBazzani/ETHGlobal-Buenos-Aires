@@ -48,7 +48,8 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
         uint256 liquidityMigrationDelay,
         uint256 lockDuration,
         uint256 snapshotLookupTimestamp,
-        Bet memory initialBet
+        IERC20 initialBetToken,
+        uint256 initialBetAmount
     ) external returns (bytes32 poolId) {
         // Initialize vaPool
         vaPools[++vaPoolCount].attacker = attacker;
@@ -68,14 +69,15 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
         }
 
         // Place initial bet
-        require(initialBet.amount >= MINIMUM_INITIAL_BET, InsufficientBetAmount());
-        _placeBet(vaPoolCount, initialBet);
+        require(initialBetAmount >= MINIMUM_INITIAL_BET, InsufficientBetAmount());
+        require(whitelistedRewardTokens[initialBetToken], RewardTokenNotWhitelisted());
+        _placeBet(vaPoolCount, BetSide.FOR, initialBetToken, initialBetAmount);
 
         emit VAPoolCreated(bytes32(vaPoolCount), address(attacker), address(victim));
     }
 
-    function placeBet(uint256 vaPoolId, Bet memory bet) external {
-        _placeBet(vaPoolId, bet);
+    function placeBet(uint256 vaPoolId, BetSide side, IERC20 token, uint256 amount) external {
+        _placeBet(vaPoolId, side, token, amount);
     }
 
     function finalizeBetting(uint256 vaPoolId) external payable {
@@ -97,11 +99,6 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
         return address(entropy);
     }
     
-    // View functions
-    function getBet(uint256 vaPoolId, address better) external view returns (Bet memory) {
-        return vaPools[vaPoolId].bets[better];
-    }
-
     // onlyOwner functions
     function setWhitelistRewardToken(IERC20 token, bool status) external onlyOwner {
 
@@ -109,26 +106,38 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
 
         emit RewardTokenWhitelisted(address(token), status);
     }
+    
+    // View functions
+    function getBet(uint256 vaPoolId, address better) external view returns (Bet memory) {
+        return vaPools[vaPoolId].bets[better];
+    }
+
+    function computeTotalBets(uint256 vaPoolId) public view returns (uint256 totalFor, uint256 totalAgainst) {}
+
 
     // Private functions
-    function _placeBet(uint256 vaPoolId, Bet memory bet) private {
+    function _placeBet(uint256 vaPoolId, BetSide side, IERC20 token, uint256 amount) private {
 
         require(vaPools[vaPoolId].state == VAPoolState.BETTING, BettingPeriodClosed());
-        require(vaPools[vaPoolId].rewardTokens[bet.token], BettingPeriodClosed());
+        require(vaPools[vaPoolId].rewardTokens[token], BettingPeriodClosed());
 
-        vaPools[vaPoolId].bets[msg.sender] = bet;
-        if (bet.side == BetSide.FOR) {
-            vaPools[vaPoolId].totalBetFor[bet.token] += bet.amount;
+        vaPools[vaPoolId].bets[msg.sender] = Bet({
+            side: side,
+            token: token,
+            amount: amount,
+            timestamp: block.timestamp
+        });
+        if (side == BetSide.FOR) {
+            vaPools[vaPoolId].totalBetFor[token] += amount;
         } else {
-            vaPools[vaPoolId].totalBetAgainst[bet.token] += bet.amount;
+            vaPools[vaPoolId].totalBetAgainst[token] += amount;
         }
 
-        vaPools[vaPoolId].bets[msg.sender] = bet;
-        
-        if (block.timestamp + INVALIDATION_WINDOW >= vaPools[vaPoolId].auctionEndTimestamp) {
+      if (block.timestamp + INVALIDATION_WINDOW >= vaPools[vaPoolId].auctionEndTimestamp) {
             vaPools[vaPoolId].invalidatableBetters.push(msg.sender);
         }
 
         emit BetPlaced(bytes32(vaPoolId), msg.sender);
     }
+
 }

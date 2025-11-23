@@ -124,26 +124,14 @@
           "type": "uint256"
         },
         {
-          "components": [
-            {
-              "internalType": "enum IBleethMeCore.BetSide",
-              "name": "side",
-              "type": "uint8"
-            },
-            {
-              "internalType": "contract IERC20",
-              "name": "token",
-              "type": "address"
-            },
-            {
-              "internalType": "uint256",
-              "name": "amount",
-              "type": "uint256"
-            }
-          ],
-          "internalType": "struct IBleethMeCore.Bet",
-          "name": "initialBet",
-          "type": "tuple"
+          "internalType": "contract IERC20",
+          "name": "initialBetToken",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "initialBetAmount",
+          "type": "uint256"
         }
       ],
       "name": "createVaPool",
@@ -188,6 +176,11 @@
               "internalType": "uint256",
               "name": "amount",
               "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "timestamp",
+              "type": "uint256"
             }
           ],
           "internalType": "struct IBleethMeCore.Bet",
@@ -206,26 +199,19 @@
           "type": "uint256"
         },
         {
-          "components": [
-            {
-              "internalType": "enum IBleethMeCore.BetSide",
-              "name": "side",
-              "type": "uint8"
-            },
-            {
-              "internalType": "contract IERC20",
-              "name": "token",
-              "type": "address"
-            },
-            {
-              "internalType": "uint256",
-              "name": "amount",
-              "type": "uint256"
-            }
-          ],
-          "internalType": "struct IBleethMeCore.Bet",
-          "name": "bet",
-          "type": "tuple"
+          "internalType": "enum IBleethMeCore.BetSide",
+          "name": "side",
+          "type": "uint8"
+        },
+        {
+          "internalType": "contract IERC20",
+          "name": "token",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
         }
       ],
       "name": "placeBet",
@@ -258,5 +244,5 @@
   "deployedLinkReferences": {},
   "immutableReferences": {},
   "inputSourceName": "project/contracts/interfaces/IBleethMeCore.sol",
-  "buildInfoId": "solc-0_8_28-935cbe97b79c04f556c9edd9bbb41312f77af316"
+  "buildInfoId": "solc-0_8_28-78694d5392c14fe9d0b9bd5c88983f11dc6396d8"
 }
