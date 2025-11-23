@@ -5,6 +5,11 @@
   "abi": [
     {
       "inputs": [],
+      "name": "AuctionNotFinalized",
+      "type": "error"
+    },
+    {
+      "inputs": [],
       "name": "BetAlreadyPlaced",
       "type": "error"
     },
@@ -21,6 +26,31 @@
     {
       "inputs": [],
       "name": "InsufficientBetAmount",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidPenalization",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidPositionVerification",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidState",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotEnoughLiquidityExtracted",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "PositionMerkleTreeNotSet",
       "type": "error"
     },
     {
@@ -52,6 +82,100 @@
       "inputs": [
         {
           "indexed": true,
+          "internalType": "uint256",
+          "name": "vaPoolId",
+          "type": "uint256"
+        }
+      ],
+      "name": "BettingFinalized",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "vaPoolId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "LiquidityPositionAllocated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "vaPoolId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "LiquidityPositionDeconstructed",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "vaPoolId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "merkleRoot",
+          "type": "bytes32"
+        }
+      ],
+      "name": "PositionsMerkleRootUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
           "internalType": "address",
           "name": "token",
           "type": "address"
@@ -71,9 +195,22 @@
       "inputs": [
         {
           "indexed": true,
-          "internalType": "bytes32",
-          "name": "poolId",
-          "type": "bytes32"
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "RewardsClaimed",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "vaPoolId",
+          "type": "uint256"
         },
         {
           "indexed": true,
@@ -90,6 +227,72 @@
       ],
       "name": "VAPoolCreated",
       "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "WithdrawFailedBet",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "vaPoolId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "tokenToMigrate",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amountToAllocate",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "migrationData",
+          "type": "bytes"
+        }
+      ],
+      "name": "allocateLiquidityPosition",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "vaPoolId",
+          "type": "uint256"
+        }
+      ],
+      "name": "claimRewards",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
     },
     {
       "inputs": [
@@ -153,6 +356,57 @@
         }
       ],
       "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "vaPoolId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "tokenToMigrate",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amountToMigrate",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "extractionData",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "proofs",
+          "type": "bytes32[]"
+        }
+      ],
+      "name": "deconstructLiquidityPosition",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "vaPoolId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes[]",
+          "name": "priceUpdate",
+          "type": "bytes[]"
+        }
+      ],
+      "name": "finalizeBetting",
+      "outputs": [],
+      "stateMutability": "payable",
       "type": "function"
     },
     {
@@ -285,6 +539,24 @@
           "internalType": "uint256",
           "name": "vaPoolId",
           "type": "uint256"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "root",
+          "type": "bytes32"
+        }
+      ],
+      "name": "updatePositionMerkleRoot",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "vaPoolId",
+          "type": "uint256"
         }
       ],
       "name": "withdrawFailedBet",
@@ -299,5 +571,5 @@
   "deployedLinkReferences": {},
   "immutableReferences": {},
   "inputSourceName": "project/contracts/interfaces/IBleethMeCore.sol",
-  "buildInfoId": "solc-0_8_28-6bc3f3f8069b38c4efa32e0d58a76e3e630cc058"
+  "buildInfoId": "solc-0_8_28-6866c8220fdd6e1436d319693dbefd562843d639"
 }

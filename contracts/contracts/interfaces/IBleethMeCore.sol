@@ -25,14 +25,26 @@ interface IBleethMeCore {
         uint256 timestamp;
     }
 
-    event VAPoolCreated(bytes32 indexed poolId, address indexed attacker, address indexed victim);
+    event VAPoolCreated(uint256 indexed vaPoolId, address indexed attacker, address indexed victim);
     event BetPlaced(bytes32 indexed poolId, address indexed user);
     event RewardTokenWhitelisted(address indexed token, bytes32 indexed priceFeedId);
+    event WithdrawFailedBet(address indexed user, address indexed token, uint256 indexed amount);
+    event RewardsClaimed(address indexed user);
+    event BettingFinalized(uint256 indexed vaPoolId);
+    event LiquidityPositionDeconstructed(uint256 indexed vaPoolId, address indexed token, uint256 indexed amount, address user);
+    event LiquidityPositionAllocated(uint256 indexed vaPoolId, address indexed token, uint256 indexed amount, address user);
+    event PositionsMerkleRootUpdated(uint256 indexed vaPoolId, bytes32 indexed merkleRoot);
 
+    error InvalidPenalization();
     error RewardTokenNotWhitelisted();
     error InsufficientBetAmount();
+    error InvalidState();
     error BettingPeriodClosed();
     error BettingPeriodNotFinalized();
+    error AuctionNotFinalized();
+    error PositionMerkleTreeNotSet();
+    error InvalidPositionVerification();
+    error NotEnoughLiquidityExtracted();
     error BetAlreadyPlaced();
 
     function createVaPool(
@@ -52,6 +64,14 @@ interface IBleethMeCore {
 
     function withdrawFailedBet(uint256 vaPoolId) external;
 
+    function claimRewards(uint256 vaPoolId) external;
+
+    function finalizeBetting(uint256 vaPoolId, bytes[] calldata priceUpdate) external payable;
+
+    function deconstructLiquidityPosition(uint256 vaPoolId, address tokenToMigrate, uint256 amountToMigrate, bytes memory extractionData, bytes32[] memory proofs) external;
+
+    function allocateLiquidityPosition(uint256 vaPoolId, address tokenToMigrate, uint256 amountToAllocate, bytes memory migrationData) external;
+
     function getBet(uint256 vaPoolId, address better) external view returns (Bet memory);
 
     function getWhitelistedRewardTokens() external view returns (address[] memory);
@@ -60,4 +80,7 @@ interface IBleethMeCore {
 
     // Admin Functions
     function setWhitelistRewardToken(IERC20 token, bytes32 priceFeedId) external;
+
+    function updatePositionMerkleRoot(uint256 vaPoolId, bytes32 root) external;
+
 }

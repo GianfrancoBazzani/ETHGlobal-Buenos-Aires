@@ -10,6 +10,7 @@ import {IEntropyV2} from "@pythnetwork/entropy-sdk-solidity/IEntropyV2.sol";
 import {IEntropyConsumer} from "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
 import {IPyth} from "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import {PythStructs} from "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
+import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
     using EnumerableMap for EnumerableMap.AddressToBytes32Map;
@@ -75,7 +76,7 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
         uint256 initialBetAmount
     ) external returns (uint256 vaPoolId) {
         // Checks
-        require(penalizationCoefficient <= PENALIZATION_BPS, "Invalid penalization");
+        require(penalizationCoefficient <= PENALIZATION_BPS, InvalidPenalization());
 
         // Initialize vaPool
         vaPools[++vaPoolCount].attacker = attacker;
@@ -100,7 +101,7 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
         _placeBet(vaPoolCount, BetSide.FOR, initialBetToken, initialBetAmount);
         vaPoolId = vaPoolCount;
 
-        emit VAPoolCreated(bytes32(vaPoolCount), address(attacker), address(victim));
+        emit VAPoolCreated(vaPoolCount, address(attacker), address(victim));
     }
 
     function placeBet(uint256 vaPoolId, BetSide side, IERC20 token, uint256 amount) external {
@@ -112,15 +113,18 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
         if(vaStreams[vaPoolId].liquidityOrigin == vaPools[vaPoolId].victim && betSide == BetSide.AGAINST
           || vaStreams[vaPoolId].liquidityOrigin == vaPools[vaPoolId].attacker && betSide == BetSide.FOR
         ){
-            vaPools[vaPoolId].bets[msg.sender].token.transfer(msg.sender, vaPools[vaPoolId].bets[msg.sender].amount);
+        IERC20 token = vaPools[vaPoolId].bets[msg.sender].token;
+            uint256 amount = vaPools[vaPoolId].bets[msg.sender].amount;
             delete vaPools[vaPoolId].bets[msg.sender];
+            token.transfer(msg.sender, amount);
+            emit WithdrawFailedBet(msg.sender, address(token), amount);
         } else {
             revert();
         }        
     }
 
     function claimRewards(uint256 vaPoolId) external {
-        require(vaPools[vaPoolId].state == VAPoolState.WITHDRAWAL);
+        require(vaPools[vaPoolId].state == VAPoolState.WITHDRAWAL, InvalidState());
         address[] memory rewardTokens = getWhitelistedRewardTokens();
         uint256 length = rewardTokens.length;
         uint256 cachedTotalLiquidityMigrated = vaStreams[vaPoolId].totalLiquidityMigrated;
@@ -140,11 +144,12 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
             }
         }
         vaStreams[vaPoolId].migrationData[msg.sender].migratedLiquidity = 0;
+        emit RewardsClaimed(msg.sender);
     }
 
     function finalizeBetting(uint256 vaPoolId, bytes[] calldata priceUpdate) external payable {
         require(vaPools[vaPoolId].state == VAPoolState.BETTING, BettingPeriodClosed());
-        require(block.timestamp >= vaPools[vaPoolId].auctionEndTimestamp, "not finalized");
+        require(block.timestamp >= vaPools[vaPoolId].auctionEndTimestamp, AuctionNotFinalized());
 
         // Update the price feed
         uint256 fee = pyth.getUpdateFee(priceUpdate);
@@ -158,6 +163,7 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
             (uint256 rewards, BetSide winnerSide) = _computeRewards(vaPoolId);
             _processWinningSide(vaPoolId, rewards, winnerSide);
             vaPools[vaPoolId].state = VAPoolState.MIGRATION;
+            emit BettingFinalized(vaPoolId);
         }
     }
 
@@ -176,15 +182,17 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
                 vaPools[vaPoolId].totalBetAgainst[bet.token] -= bet.amount;
             }
         }
-        // TODO
         (uint256 rewards, BetSide winnerSide) = _computeRewards(vaPoolId);
         _processWinningSide(vaPoolId, rewards, winnerSide);
         vaPools[vaPoolId].state = VAPoolState.MIGRATION;
+        emit BettingFinalized(vaPoolId);
     }
 
-    function deconstructLiquidityPosition(uint256 vaPoolId, address tokenToMigrate, uint256 amountToMigrate, bytes memory extractionData) external {
-        require(vaStreams[vaPoolId].balancesMerkleRoot != bytes32(0));
-        // TODO: merkle proof verification
+    function deconstructLiquidityPosition(uint256 vaPoolId, address tokenToMigrate, uint256 amountToMigrate, bytes memory extractionData, bytes32[] memory proofs) external {
+        bytes32 balancesMerkleRoot = vaStreams[vaPoolId].balancesMerkleRoot;
+        require(balancesMerkleRoot != bytes32(0), PositionMerkleTreeNotSet());
+        bytes32 leaf = keccak256(abi.encode(msg.sender, tokenToMigrate, amountToMigrate));
+        require(MerkleProof.verify(proofs, balancesMerkleRoot, leaf), InvalidPositionVerification());
         vaStreams[vaPoolId].liquidityOrigin.extractLiquidity(
             tokenToMigrate,
             amountToMigrate,
@@ -193,10 +201,11 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
         );
 
         vaStreams[vaPoolId].migrationData[msg.sender].deconstructedLiquidity += amountToMigrate;
+        emit LiquidityPositionDeconstructed(vaPoolId, tokenToMigrate, amountToMigrate, msg.sender);
     }
 
     function allocateLiquidityPosition(uint256 vaPoolId, address tokenToMigrate, uint256 amountToAllocate, bytes memory migrationData) external {
-        require(vaStreams[vaPoolId].migrationData[msg.sender].migratedLiquidity > amountToAllocate);
+        require(vaStreams[vaPoolId].migrationData[msg.sender].migratedLiquidity > amountToAllocate, NotEnoughLiquidityExtracted());
         vaStreams[vaPoolId].liquidityDestination.allocateLiquidity(
             tokenToMigrate,
             amountToAllocate,
@@ -207,6 +216,8 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
         vaStreams[vaPoolId].totalLiquidityMigrated += amountToAllocate;
         vaStreams[vaPoolId].migrationData[msg.sender].deconstructedLiquidity -= amountToAllocate;
         vaStreams[vaPoolId].migrationData[msg.sender].migratedLiquidity += amountToAllocate;
+
+        emit LiquidityPositionAllocated(vaPoolId, tokenToMigrate, amountToAllocate, msg.sender);
     }
 
     // onlyOwner functions
@@ -221,20 +232,12 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
     function updatePositionMerkleRoot(uint256 vaPoolId, bytes32 root) external onlyOwner {
         vaStreams[vaPoolId].balancesMerkleRoot = root;
         vaPools[vaPoolId].state = VAPoolState.LOCKING;
-    }
-
-    function finalizeBettingPeriod(uint256 vaPoolId) external onlyOwner {
-        require(vaPools[vaPoolId].state == VAPoolState.BETTING, BettingPeriodClosed());
-        vaPools[vaPoolId].state = VAPoolState.MIGRATION;
+        emit PositionsMerkleRootUpdated(vaPoolId, root);
     }
 
     // View functions
     function getBet(uint256 vaPoolId, address better) external view returns (Bet memory) {
         return vaPools[vaPoolId].bets[better];
-    }
-
-    function computeTotalBets(uint256 vaPoolId) public view returns (uint256 totalFor, uint256 totalAgainst) {
-        // TODO
     }
 
     function getWhitelistedRewardTokens() public view returns (address[] memory) {
@@ -293,7 +296,7 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
             if (vaPools[vaPoolId].rewardTokens[IERC20(rewardTokens[i])]) {
                 bytes32 priceFeedId = whitelistedRewardTokens.get(rewardTokens[i]); 
                 PythStructs.Price memory price = pyth.getPriceNoOlderThan(priceFeedId, MAX_PRICE_AGE);
-                uint256 assetPrice = getPythPrice1e18(price);
+                uint256 assetPrice = getPythPrice(price);
 
                 totalValueFor += assetPrice * vaPools[vaPoolId].totalBetFor[IERC20(rewardTokens[i])];
                 totalValueAgainst += assetPrice * vaPools[vaPoolId].totalBetAgainst[IERC20(rewardTokens[i])];
@@ -305,11 +308,9 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
         } else {
             return (totalValueAgainst + totalValueFor * vaPools[vaPoolId].penalizationCoefficient / PENALIZATION_BPS, BetSide.AGAINST);
         }
-
-        // TODO
     }
 
-    function getPythPrice1e18(PythStructs.Price memory pythPrice) public pure returns (uint256) {
+    function getPythPrice(PythStructs.Price memory pythPrice) public pure returns (uint256) {
         if (pythPrice.price == 0) revert();
         if (pythPrice.publishTime == 0) revert();
         if (pythPrice.price < 0 || pythPrice.expo > 0) revert();
