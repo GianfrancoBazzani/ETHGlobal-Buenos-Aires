@@ -40,7 +40,8 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
         IBaseAdapter liquidityOrigin;
         IBaseAdapter liquidityDestination;
         uint256 totalRewards;
-        mapping(uint256 vaPoolId => mapping(address user => MigratedFunds migrationData)) migrationData;
+        uint256 totalLiquidityMigrated;
+        mapping(address user => MigratedFunds migrationData) migrationData;
     }
 
     uint256 constant MINIMUM_INITIAL_BET = 0;
@@ -117,6 +118,29 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
         }        
     }
 
+    function claimRewards(uint256 vaPoolId) external {
+        require(vaPools[vaPoolId].state == VAPoolState.WITHDRAWAL);
+        address[] memory rewardTokens = getWhitelistedRewardTokens();
+        uint256 length = rewardTokens.length;
+        uint256 cachedTotalLiquidityMigrated = vaStreams[vaPoolId].totalLiquidityMigrated;
+
+        for (uint256 i = 0; i < length; i++) {
+            if (vaPools[vaPoolId].rewardTokens[IERC20(rewardTokens[i])]) {
+                uint256 tokenRewardAmount;
+                if(vaStreams[vaPoolId].liquidityOrigin == vaPools[vaPoolId].victim){
+                    tokenRewardAmount = vaPools[vaPoolId].totalBetFor[IERC20(rewardTokens[i])] +
+                    vaPools[vaPoolId].totalBetAgainst[IERC20(rewardTokens[i])] * vaPools[vaPoolId].penalizationCoefficient / PENALIZATION_BPS;
+                } else {
+                    tokenRewardAmount = vaPools[vaPoolId].totalBetAgainst[IERC20(rewardTokens[i])] +
+                    vaPools[vaPoolId].totalBetFor[IERC20(rewardTokens[i])] * vaPools[vaPoolId].penalizationCoefficient / PENALIZATION_BPS;
+                }
+                uint256 claimableAmount = vaStreams[vaPoolId].migrationData[msg.sender].migratedLiquidity * tokenRewardAmount / cachedTotalLiquidityMigrated;
+                IERC20(rewardTokens[i]).transfer(msg.sender, claimableAmount);
+            }
+        }
+        vaStreams[vaPoolId].migrationData[msg.sender].migratedLiquidity = 0;
+    }
+
     function finalizeBetting(uint256 vaPoolId, bytes[] calldata priceUpdate) external payable {
         require(vaPools[vaPoolId].state == VAPoolState.BETTING, BettingPeriodClosed());
         require(block.timestamp >= vaPools[vaPoolId].auctionEndTimestamp, "not finalized");
@@ -168,11 +192,11 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
             address(vaStreams[vaPoolId].liquidityDestination)
         );
 
-        vaStreams[vaPoolId].migrationData[vaPoolId][msg.sender].deconstructedLiquidity += amountToMigrate;
+        vaStreams[vaPoolId].migrationData[msg.sender].deconstructedLiquidity += amountToMigrate;
     }
 
     function allocateLiquidityPosition(uint256 vaPoolId, address tokenToMigrate, uint256 amountToAllocate, bytes memory migrationData) external {
-        require(vaStreams[vaPoolId].migrationData[vaPoolId][msg.sender].migratedLiquidity > amountToAllocate);
+        require(vaStreams[vaPoolId].migrationData[msg.sender].migratedLiquidity > amountToAllocate);
         vaStreams[vaPoolId].liquidityDestination.allocateLiquidity(
             tokenToMigrate,
             amountToAllocate,
@@ -180,7 +204,9 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
             msg.sender
         );
 
-        vaStreams[vaPoolId].migrationData[vaPoolId][msg.sender].migratedLiquidity += amountToAllocate;
+        vaStreams[vaPoolId].totalLiquidityMigrated += amountToAllocate;
+        vaStreams[vaPoolId].migrationData[msg.sender].deconstructedLiquidity -= amountToAllocate;
+        vaStreams[vaPoolId].migrationData[msg.sender].migratedLiquidity += amountToAllocate;
     }
 
     // onlyOwner functions
