@@ -1,6 +1,9 @@
-import type { Metadata } from "next";
+
+
 import { Geist, Geist_Mono } from "next/font/google";
+
 import "./globals.css";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -11,24 +14,21 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+import '@rainbow-me/rainbowkit/styles.css';
+import { Providers } from '../components/Web3Provider';
 
-export const metadata: Metadata = {
-  title: "Video",
-  description: "Video player",
-};
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
 }
+
+export default RootLayout;
+
+
+
+
