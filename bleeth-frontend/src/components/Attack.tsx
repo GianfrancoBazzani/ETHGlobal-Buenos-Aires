@@ -1,0 +1,216 @@
+"use client";
+
+import { useState, useRef, useEffect } from "react";
+
+interface AttackProps {
+  onBack: () => void;
+}
+
+export default function Attack({ onBack }: AttackProps) {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [selectedTarget, setSelectedTarget] = useState("");
+  const [selectedAttacker, setSelectedAttacker] = useState("");
+  const [initialAmount, setInitialAmount] = useState("");
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const stepTimestamps = [0, 1, 2, 9];
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleTimeUpdate = () => {
+      const currentTime = video.currentTime;
+      const nextStepTime = stepTimestamps[currentStep];
+
+      if (currentTime >= nextStepTime && !video.paused) {
+        video.pause();
+      }
+    };
+
+    video.addEventListener("timeupdate", handleTimeUpdate);
+    video.currentTime = stepTimestamps[currentStep - 1];
+    video.play();
+
+    return () => {
+      video.removeEventListener("timeupdate", handleTimeUpdate);
+    };
+  }, [currentStep]);
+
+  const handleNext = () => {
+    if (currentStep < 3) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleSubmit = () => {
+    console.log("Attack submitted:", {
+      target: selectedTarget,
+      attacker: selectedAttacker,
+      amount: initialAmount,
+    });
+  };
+
+  const canProceed = () => {
+    switch (currentStep) {
+      case 1:
+        return selectedTarget && selectedAttacker;
+      case 2:
+        return initialAmount;
+      case 3:
+        return true;
+      default:
+        return false;
+    }
+  };
+
+  return (
+    <div className="w-full h-full flex flex-col items-center p-4 overflow-auto">
+      <button
+        onClick={onBack}
+        className="text-white hover:text-red-300 mb-4 text-lg self-start"
+      >
+        ← Back
+      </button>
+
+      <div className="w-full max-w-md mb-4">
+        <video
+          ref={videoRef}
+          className="w-full rounded-lg max-h-[300px]"
+          muted
+          playsInline
+        >
+          <source src="/attack.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      </div>
+
+      <div className="w-full max-w-md bg-gray-900/50 rounded-lg p-6 border border-red-900/30">
+        
+
+        <div className="mb-4">
+          <div className="flex gap-2 mb-6">
+            {[1, 2, 3].map((step) => (
+              <div
+                key={step}
+                className={`flex-1 h-2 rounded-full transition-colors ${
+                  step <= currentStep ? "bg-red-500" : "bg-gray-700"
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+
+        {currentStep === 1 && (
+          <div className="space-y-4">
+            <h3 className="text-white text-xl font-semibold mb-4">Select Target & Attacker</h3>
+
+            <div>
+              <label className="text-white text-sm mb-2 block">Select Target</label>
+              <select
+                value={selectedTarget}
+                onChange={(e) => setSelectedTarget(e.target.value)}
+                className="w-full bg-gray-800 text-white border border-red-900/30 rounded px-3 py-2 focus:outline-none focus:border-red-500"
+              >
+                <option value="">Choose a target...</option>
+                <option value="target1">Target 1</option>
+                <option value="target2">Target 2</option>
+                <option value="target3">Target 3</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-white text-sm mb-2 block">Select Attacker</label>
+              <select
+                value={selectedAttacker}
+                onChange={(e) => setSelectedAttacker(e.target.value)}
+                className="w-full bg-gray-800 text-white border border-red-900/30 rounded px-3 py-2 focus:outline-none focus:border-red-500"
+              >
+                <option value="">Choose an attacker...</option>
+                <option value="attacker1">Attacker 1</option>
+                <option value="attacker2">Attacker 2</option>
+                <option value="attacker3">Attacker 3</option>
+              </select>
+            </div>
+          </div>
+        )}
+
+        {currentStep === 2 && (
+          <div className="space-y-4">
+            <h3 className="text-white text-xl font-semibold mb-4">Initial Amount</h3>
+
+            <div>
+              <label className="text-white text-sm mb-2 block">Amount (ETH)</label>
+              <input
+                type="number"
+                value={initialAmount}
+                onChange={(e) => setInitialAmount(e.target.value)}
+                placeholder="0.0"
+                step="0.01"
+                min="0"
+                className="w-full bg-gray-800 text-white border border-red-900/30 rounded px-3 py-2 focus:outline-none focus:border-red-500"
+              />
+            </div>
+          </div>
+        )}
+
+        {currentStep === 3 && (
+          <div className="space-y-4">
+
+            <div className="bg-gray-800/50 p-4 rounded border border-red-900/20">
+              <h4 className="text-red-300 font-semibold mb-2">Attack Summary</h4>
+              <div className="space-y-2 text-white text-sm">
+                <p><span className="text-gray-400">Target:</span> {selectedTarget}</p>
+                <p><span className="text-gray-400">Attacker:</span> {selectedAttacker}</p>
+                <p><span className="text-gray-400">Amount:</span> {initialAmount} ETH</p>
+              </div>
+            </div>
+
+            <p className="text-white text-sm text-center mt-4">
+              Review the details above and sign the contract to proceed with the attack.
+            </p>
+          </div>
+        )}
+
+        <div className="flex gap-3 mt-6">
+          {currentStep > 1 && (
+            <button
+              onClick={handlePrevious}
+              className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded transition-colors"
+            >
+              Previous
+            </button>
+          )}
+
+          {currentStep < 3 ? (
+            <button
+              onClick={handleNext}
+              disabled={!canProceed()}
+              className={`flex-1 font-semibold py-2 px-4 rounded transition-colors ${
+                canProceed()
+                  ? "bg-red-600 hover:bg-red-700 text-white"
+                  : "bg-gray-700 text-gray-500 cursor-not-allowed"
+              }`}
+            >
+              Next
+            </button>
+          ) : (
+            <button
+              onClick={handleSubmit}
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded transition-colors"
+            >
+              Sign Contract
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+

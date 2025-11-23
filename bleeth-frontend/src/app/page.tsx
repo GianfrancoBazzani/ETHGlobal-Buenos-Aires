@@ -1,6 +1,13 @@
+"use client";
+
+import { useState } from "react";
 import PageSelector from "@/components/PageSelector";
+import Attack from "@/components/Attack";
+import Pots from "@/components/Pots";
 
 export default function Home() {
+  const [currentView, setCurrentView] = useState<"default" | "attack" | "pots">("default");
+
   return (
     <div className="flex flex-col h-screen items-center justify-center bg-black overflow-hidden">
       
@@ -11,14 +18,24 @@ export default function Home() {
         autoPlay
         muted
         playsInline
-        className="max-w-[90vw] max-h-[200px] w-full h-full"
+        className={`max-w-[90vw] ${currentView === "default" ? "max-h-[200px]" : "max-h-[100px]"} w-full h-full`}
       >
         <source src="/bleeth-02.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
       
-      <PageSelector />
-      
+      {currentView === "default" && (
+        <PageSelector 
+          onAttackClick={() => setCurrentView("attack")}
+          onPotsClick={() => setCurrentView("pots")}
+        />
+      )}
+      {currentView === "attack" && (
+        <Attack onBack={() => setCurrentView("default")} />
+      )}
+      {currentView === "pots" && (
+        <Pots onBack={() => setCurrentView("default")} />
+      )}
 
 
 
