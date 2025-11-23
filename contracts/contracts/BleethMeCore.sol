@@ -30,11 +30,17 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
         VAPoolState state;
     }
 
+    struct MigratedFunds {
+        uint256 deconstructedLiquidity;
+        uint256 migratedLiquidity;
+    }
+
     struct VAStream {
         bytes32 balancesMerkleRoot;
         IBaseAdapter liquidityOrigin;
         IBaseAdapter liquidityDestination;
         uint256 totalRewards;
+        mapping(uint256 vaPoolId => mapping(address user => MigratedFunds migrationData)) migrationData;
     }
 
     uint256 constant MINIMUM_INITIAL_BET = 0;
@@ -100,7 +106,15 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
     }
 
     function withdrawFailedBet(uint256 vaPoolId) external {
-        // TODO
+        BetSide betSide = vaPools[vaPoolId].bets[msg.sender].side;
+        if(vaStreams[vaPoolId].liquidityOrigin == vaPools[vaPoolId].victim && betSide == BetSide.AGAINST
+          || vaStreams[vaPoolId].liquidityOrigin == vaPools[vaPoolId].attacker && betSide == BetSide.FOR
+        ){
+            vaPools[vaPoolId].bets[msg.sender].token.transfer(msg.sender, vaPools[vaPoolId].bets[msg.sender].amount);
+            delete vaPools[vaPoolId].bets[msg.sender];
+        } else {
+            revert();
+        }        
     }
 
     function finalizeBetting(uint256 vaPoolId, bytes[] calldata priceUpdate) external payable {
@@ -144,6 +158,31 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
         vaPools[vaPoolId].state = VAPoolState.MIGRATION;
     }
 
+    function deconstructLiquidityPosition(uint256 vaPoolId, address tokenToMigrate, uint256 amountToMigrate, bytes memory extractionData) external {
+        require(vaStreams[vaPoolId].balancesMerkleRoot != bytes32(0));
+        // TODO: merkle proof verification
+        vaStreams[vaPoolId].liquidityOrigin.extractLiquidity(
+            tokenToMigrate,
+            amountToMigrate,
+            extractionData,
+            address(vaStreams[vaPoolId].liquidityDestination)
+        );
+
+        vaStreams[vaPoolId].migrationData[vaPoolId][msg.sender].deconstructedLiquidity += amountToMigrate;
+    }
+
+    function allocateLiquidityPosition(uint256 vaPoolId, address tokenToMigrate, uint256 amountToAllocate, bytes memory migrationData) external {
+        require(vaStreams[vaPoolId].migrationData[vaPoolId][msg.sender].migratedLiquidity > amountToAllocate);
+        vaStreams[vaPoolId].liquidityDestination.allocateLiquidity(
+            tokenToMigrate,
+            amountToAllocate,
+            migrationData,
+            msg.sender
+        );
+
+        vaStreams[vaPoolId].migrationData[vaPoolId][msg.sender].migratedLiquidity += amountToAllocate;
+    }
+
     // onlyOwner functions
     function setWhitelistRewardToken(IERC20 token, bytes32 priceFeedId) external onlyOwner {
         // TODO check oracle
@@ -155,6 +194,7 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
 
     function updatePositionMerkleRoot(uint256 vaPoolId, bytes32 root) external onlyOwner {
         vaStreams[vaPoolId].balancesMerkleRoot = root;
+        vaPools[vaPoolId].state = VAPoolState.LOCKING;
     }
 
     function finalizeBettingPeriod(uint256 vaPoolId) external onlyOwner {

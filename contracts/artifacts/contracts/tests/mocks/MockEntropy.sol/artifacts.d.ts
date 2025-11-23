@@ -15,7 +15,7 @@ export interface MockEntropy$Type {
   readonly deployedLinkReferences: {};
   readonly immutableReferences: {};
   readonly inputSourceName: "project/contracts/tests/mocks/MockEntropy.sol";
-  readonly buildInfoId: "solc-0_8_28-1e970f38cf8460bd356cbaf2dc22f6087274fdef";
+  readonly buildInfoId: "solc-0_8_28-1e531ab86e9548f38c04b6462c265981f8b7122c";
 };
 
 import "hardhat/types/artifacts";

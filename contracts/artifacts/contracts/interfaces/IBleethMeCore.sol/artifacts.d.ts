@@ -15,7 +15,7 @@ export interface IBleethMeCore$Type {
   readonly deployedLinkReferences: {};
   readonly immutableReferences: {};
   readonly inputSourceName: "project/contracts/interfaces/IBleethMeCore.sol";
-  readonly buildInfoId: "solc-0_8_28-7e2905ba58dbd77fee8103a3a26b5b0045da34c6";
+  readonly buildInfoId: "solc-0_8_28-1e531ab86e9548f38c04b6462c265981f8b7122c";
 };
 
 import "hardhat/types/artifacts";
