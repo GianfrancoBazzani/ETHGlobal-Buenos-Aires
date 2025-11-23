@@ -15,7 +15,7 @@ contract BleethMeCoreTest is Test {
 
     // Contracts
     BleethMeCore bleethMeCore;
-    
+
     // Mocks
     MockERC20 rewardTokenA;
     MockERC20 rewardTokenB;
@@ -33,12 +33,11 @@ contract BleethMeCoreTest is Test {
         baseFork = vm.createFork("wss://base-rpc.publicnode.com");
         vm.selectFork(baseFork);
 
-        
         // Deploy mock ERC20 token for testing
         rewardTokenA = new MockERC20("Reward Token A", "RTA");
         rewardTokenB = new MockERC20("Reward Token B", "RTB");
         liquidityTokenA = new MockERC20("Liquidity Token A", "LTA");
-        liquidityTokenB = new MockERC20("Liquidity Token B", "LTB");  
+        liquidityTokenB = new MockERC20("Liquidity Token B", "LTB");
 
         // Deploy mock adapters
         attackerAdapter = new MockAdapter(address(bleethMeCore));
@@ -54,14 +53,12 @@ contract BleethMeCoreTest is Test {
         bleethMeCore.setWhitelistRewardToken(rewardTokenB, true);
         vm.stopPrank();
     }
-    
 
     function test_VaPoolCreation() public {
-
-        IERC20[] memory rewardTokens = new IERC20[](2);    
+        IERC20[] memory rewardTokens = new IERC20[](2);
         rewardTokens[0] = rewardTokenA;
         rewardTokens[1] = rewardTokenB;
-        
+
         vm.startPrank(USER1);
         rewardTokenA.mint(USER1, 10_000 ether);
         rewardTokenA.approve(address(bleethMeCore), 10_000 ether);

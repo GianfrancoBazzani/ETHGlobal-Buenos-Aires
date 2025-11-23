@@ -9,10 +9,9 @@ import {IEntropyV2} from "@pythnetwork/entropy-sdk-solidity/IEntropyV2.sol";
 import {IEntropyConsumer} from "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
 
 import {IPyth} from "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
-import {PythStructs} from  "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
+import {PythStructs} from "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 
 contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
-
     struct VAPool {
         IBaseAdapter attacker;
         IBaseAdapter victim;
@@ -34,7 +33,6 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
         IBaseAdapter liquidityOrigin;
         IBaseAdapter liquidityDestination;
         uint256 totalRewards;
-
     }
 
     uint256 constant MINIMUM_INITIAL_BET = 0;
@@ -73,14 +71,13 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
         vaPools[vaPoolCount].snapshotLookupTimestamp = snapshotLookupTimestamp;
         vaPools[vaPoolCount].state = VAPoolState.BETTING;
 
-
         // Set reward tokens
         uint256 length = rewardTokens.length;
         for (uint256 i = 0; i < length; i++) {
             require(whitelistedRewardTokens[rewardTokens[i]], RewardTokenNotWhitelisted());
             vaPools[vaPoolCount].rewardTokens[rewardTokens[i]] = true;
         }
-        
+
         // Place initial bet
         require(initialBetAmount >= MINIMUM_INITIAL_BET, InsufficientBetAmount());
         require(whitelistedRewardTokens[initialBetToken], RewardTokenNotWhitelisted());
@@ -98,45 +95,40 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
     }
 
     function finalizeBetting(uint256 vaPoolId) external payable {
+        require(vaPools[vaPoolId].state == VAPoolState.BETTING, BettingPeriodClosed());
         require(block.timestamp >= vaPools[vaPoolId].auctionEndTimestamp, "not finalized");
-        if(vaPools[vaPoolId].invalidatableBetters.length != 0){
+        if (vaPools[vaPoolId].invalidatableBetters.length != 0) {
             uint128 requestFee = entropy.getFeeV2();
             if (msg.value < requestFee) revert("not enough fees");
-            randomnessMapping[entropy.requestV2{ value: requestFee }()] = vaPoolId;
+            randomnessMapping[entropy.requestV2{value: requestFee}()] = vaPoolId;
         } else {
-            Bet memory winnerBet;   // todo: determine winnerBet
-            _processWinningSide(vaPoolId, winnerBet);
+            uint256 rewards = _computeRewards();
+            _processWinningSide(vaPoolId, rewards);
             vaPools[vaPoolId].state = VAPoolState.MIGRATION;
         }
-        
     }
 
-    function entropyCallback(
-        uint64 sequenceNumber,
-        address,
-        bytes32 randomNumber
-    ) internal override {
+    function entropyCallback(uint64 sequenceNumber, address, bytes32 randomNumber) internal override {
         uint256 vaPoolId = randomnessMapping[sequenceNumber];
 
-        uint256 finalAuctionEndTimestamp = vaPools[vaPoolId].auctionEndTimestamp - (uint256(randomNumber) % INVALIDATION_WINDOW);
+        uint256 finalAuctionEndTimestamp =
+            vaPools[vaPoolId].auctionEndTimestamp - (uint256(randomNumber) % INVALIDATION_WINDOW);
         Bet memory winnerBet;
-        for(uint256 i = vaPools[vaPoolId].invalidatableBetters.length; i >= 0; i--){
-            if(vaPools[vaPoolId].invalidatableBetters[i].timestamp < finalAuctionEndTimestamp){
+        for (uint256 i = vaPools[vaPoolId].invalidatableBetters.length; i >= 0; i--) {
+            // TODO
+            if (vaPools[vaPoolId].invalidatableBetters[i].timestamp < finalAuctionEndTimestamp) {
                 winnerBet = vaPools[vaPoolId].invalidatableBetters[i];
                 break;
             }
         }
+        uint256 rewards = _computeRewards();
+        processWinningSide(vaPoolId, rewards);
         _processWinningSide(vaPoolId, winnerBet);
         vaPools[vaPoolId].state = VAPoolState.MIGRATION;
     }
 
-    function getEntropy() internal view override returns (address) {
-        return address(entropy);
-    }
-    
     // onlyOwner functions
     function setWhitelistRewardToken(IERC20 token, bool status) external onlyOwner {
-
         whitelistedRewardTokens[token] = status;
 
         emit RewardTokenWhitelisted(address(token), status);
@@ -146,30 +138,27 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
         require(vaPools[vaPoolId].state == VAPoolState.BETTING, BettingPeriodClosed());
         vaPools[vaPoolId].state = VAPoolState.MIGRATION;
     }
-    
+
     // View functions
     function getBet(uint256 vaPoolId, address better) external view returns (Bet memory) {
         return vaPools[vaPoolId].bets[better];
     }
 
     function computeTotalBets(uint256 vaPoolId) public view returns (uint256 totalFor, uint256 totalAgainst) {
-        
+        // TODO
     }
 
+    function getEntropy() internal view override returns (address) {
+        return address(entropy);
+    }
 
     // Private functions
     function _placeBet(uint256 vaPoolId, BetSide side, IERC20 token, uint256 amount) private {
-
         require(vaPools[vaPoolId].state == VAPoolState.BETTING, BettingPeriodClosed());
         require(vaPools[vaPoolId].rewardTokens[token], RewardTokenNotWhitelisted());
         require(vaPools[vaPoolId].bets[msg.sender].amount == 0, BetAlreadyPlaced());
 
-        vaPools[vaPoolId].bets[msg.sender] = Bet({
-            side: side,
-            token: token,
-            amount: amount,
-            timestamp: block.timestamp
-        });
+        vaPools[vaPoolId].bets[msg.sender] = Bet({side: side, token: token, amount: amount, timestamp: block.timestamp});
         if (side == BetSide.FOR) {
             vaPools[vaPoolId].totalBetFor[token] += amount;
         } else {
@@ -185,8 +174,7 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
         emit BetPlaced(bytes32(vaPoolId), msg.sender);
     }
 
-    function _processWinningSide(uint256 vaPoolId, Bet memory winningBet) internal {
-
+    function _processWinningSide(uint256 vaPoolId, uint256 rewards) internal {
+        // TODO
     }
-
 }

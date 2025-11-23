@@ -32,6 +32,7 @@ interface IBleethMeCore {
     error RewardTokenNotWhitelisted();
     error InsufficientBetAmount();
     error BettingPeriodClosed();
+    error BettingPeriodNotFinalized();
     error BetAlreadyPlaced();
 
     function createVaPool(
@@ -52,7 +53,6 @@ interface IBleethMeCore {
     function withdrawFailedBet(uint256 vaPoolId) external;
 
     function getBet(uint256 vaPoolId, address better) external view returns (Bet memory);
-
 
     // Admin Functions
     function setWhitelistRewardToken(IERC20 token, bool status) external;
