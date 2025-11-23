@@ -92,5 +92,6 @@ Adapters with protocols, held the locked liquidity and allows the users to manag
 
 `pnpm hardhat test contracts/tests/BleethMeCore.t.sol`
 
-## Deployment
+## Deployments
 
+BleethMeCore: `0x32E3337321578c7ecE3AF13ba98aa70581a15203`

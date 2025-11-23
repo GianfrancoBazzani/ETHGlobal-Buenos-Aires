@@ -1,8 +1,9 @@
 import hardhatToolboxViemPlugin from "@nomicfoundation/hardhat-toolbox-viem";
+import hardhatIgnitionViemPlugin from "@nomicfoundation/hardhat-ignition-viem";
 import { configVariable, defineConfig } from "hardhat/config";
 
 export default defineConfig({
-  plugins: [hardhatToolboxViemPlugin],
+  plugins: [hardhatToolboxViemPlugin, hardhatIgnitionViemPlugin],
   solidity: {
     profiles: {
       default: {
@@ -33,6 +34,12 @@ export default defineConfig({
       chainType: "l1",
       url: configVariable("SEPOLIA_RPC_URL"),
       accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
+    },
+    base: {
+      type: "http",
+      chainType: "op",
+      url: "https://1rpc.io/base",
+      accounts: [configVariable("BASE_PRIVATE_KEY")],
     },
   },
 });
