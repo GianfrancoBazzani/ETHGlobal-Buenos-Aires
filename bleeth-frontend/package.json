@@ -8,9 +8,10 @@
     "start": "next start"
   },
   "dependencies": {
+    "@pythnetwork/hermes-client": "^2.1.0",
     "@rainbow-me/rainbowkit": "^2.2.9",
     "@tanstack/react-query": "^5.55.3",
-   "next": "^15.3.3",
+    "next": "^15.3.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "viem": "2.38.0",

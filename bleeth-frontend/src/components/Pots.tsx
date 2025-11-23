@@ -1,6 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { bleethMeCoreAbi, bleethMeCoreAddress } from "@/config/contracts";
+import { fetchRewardTokenPriceUpdates } from "@/utils/pyth";
 
 interface Protocol {
   name: string;
@@ -68,6 +71,16 @@ export default function Pots({ onBack }: PotsProps) {
   const [amount, setAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isFinalizing, setIsFinalizing] = useState(false);
+  const [finalizeError, setFinalizeError] = useState<string | null>(null);
+
+  // Contract write hook for finalizeBetting
+  const { writeContract, data: hash, error: writeError, isPending } = useWriteContract();
+
+  // Wait for transaction confirmation
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash,
+  });
 
   const handleBattleClick = (index: number) => {
     // Only allow clicking the first battle (Morpho vs Aave)
@@ -99,6 +112,65 @@ export default function Pots({ onBack }: PotsProps) {
       setAmount("");
     }, 3000);
   };
+
+  const handleFinalizeBetting = async () => {
+    setIsFinalizing(true);
+    setFinalizeError(null);
+
+    try {
+      // Fetch price updates from Hermes
+      console.log("Fetching price updates from Hermes...");
+      const { priceUpdates, updateFee } = await fetchRewardTokenPriceUpdates();
+
+      console.log("Price updates fetched:", {
+        updateCount: priceUpdates.length,
+        updateFee: updateFee.toString(),
+      });
+
+      // VAPool ID - using 0 as default, you may need to pass this as a prop or state
+      const vaPoolId = 0;
+
+      // Convert hex strings to bytes by adding '0x' prefix if not present
+      const formattedPriceUpdates = priceUpdates.map((update) =>
+        update.startsWith('0x') ? update : `0x${update}`
+      );
+
+      // Call the contract's finalizeBetting function
+      writeContract({
+        address: bleethMeCoreAddress,
+        abi: bleethMeCoreAbi,
+        functionName: "finalizeBetting",
+        args: [BigInt(vaPoolId), formattedPriceUpdates],
+        value: updateFee, // Send the fee required by Pyth oracle
+      });
+
+      console.log("Transaction submitted");
+    } catch (error) {
+      console.error("Error finalizing betting:", error);
+      setFinalizeError(error instanceof Error ? error.message : "Failed to finalize betting");
+      setIsFinalizing(false);
+    }
+  };
+
+  // Handle transaction confirmation
+  useEffect(() => {
+    if (isConfirmed) {
+      console.log("Betting finalized successfully!");
+      setIsFinalizing(false);
+      setShowSuccess(true);
+
+      // Hide success message after 3 seconds
+      setTimeout(() => {
+        setShowSuccess(false);
+      }, 3000);
+    }
+
+    if (writeError) {
+      console.error("Transaction error:", writeError);
+      setFinalizeError(writeError.message);
+      setIsFinalizing(false);
+    }
+  }, [isConfirmed, writeError]);
 
   // If a battle is selected, show the detail view
   if (selectedBattle !== null) {
@@ -195,6 +267,44 @@ export default function Pots({ onBack }: PotsProps) {
                 >
                   {isLoading ? "Loading..." : "Submit"}
                 </button>
+
+                {/* Finalize Betting Button */}
+                <div className="mt-6 pt-6 border-t border-red-900/30">
+                  <p className="text-white/60 text-xs mb-3 text-center">
+                    When the betting period is over, finalize the battle to determine the winner
+                  </p>
+                  <button
+                    onClick={handleFinalizeBetting}
+                    disabled={isFinalizing || isPending || isConfirming}
+                    className={`w-full font-semibold py-3 px-4 rounded transition-colors ${
+                      !isFinalizing && !isPending && !isConfirming
+                        ? "bg-purple-600 hover:bg-purple-700 text-white"
+                        : "bg-gray-700 text-gray-500 cursor-not-allowed"
+                    }`}
+                  >
+                    {isFinalizing || isPending
+                      ? "Fetching Price Updates..."
+                      : isConfirming
+                      ? "Confirming Transaction..."
+                      : "Finalize Betting"}
+                  </button>
+
+                  {/* Error Message */}
+                  {finalizeError && (
+                    <div className="mt-3 bg-red-900/30 border border-red-600/50 rounded-lg p-3">
+                      <p className="text-red-300 text-sm">{finalizeError}</p>
+                    </div>
+                  )}
+
+                  {/* Transaction Hash */}
+                  {hash && (
+                    <div className="mt-3 bg-blue-900/30 border border-blue-600/50 rounded-lg p-3">
+                      <p className="text-blue-300 text-xs">
+                        Transaction: {hash.slice(0, 10)}...{hash.slice(-8)}
+                      </p>
+                    </div>
+                  )}
+                </div>
               </>
             )}
           </div>
@@ -261,3 +371,4 @@ export default function Pots({ onBack }: PotsProps) {
     </div>
   );
 }
+
