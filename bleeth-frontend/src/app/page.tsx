@@ -18,7 +18,7 @@ export default function Home() {
         autoPlay
         muted
         playsInline
-        className={`max-w-[90vw] ${currentView === "default" ? "max-h-[200px]" : "max-h-[100px]"} w-full h-full`}
+        className={`max-w-[90vw] ${currentView === "default" ? "max-h-[200px]" : "max-h-[100px] -top-1.5"} w-full h-full`}
       >
         <source src="/bleeth-02.mp4" type="video/mp4" />
         Your browser does not support the video tag.

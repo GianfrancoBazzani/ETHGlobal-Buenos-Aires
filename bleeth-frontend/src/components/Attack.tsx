@@ -145,8 +145,8 @@ export default function Attack({ onBack }: AttackProps) {
                 className="w-full bg-gray-800 text-white border border-red-900/30 rounded px-3 py-2 focus:outline-none focus:border-red-500"
               >
                 <option value="">Choose a Victim...</option>
-                <option value="target1">Morpho</option>
-                <option value="target2">Aave</option>
+                <option value="target1">Aave</option>
+                <option value="target2">Bleeth</option>
                 <option value="target3">Uniswap v3</option>
               </select>
             </div>
@@ -159,7 +159,7 @@ export default function Attack({ onBack }: AttackProps) {
                 className="w-full bg-gray-800 text-white border border-red-900/30 rounded px-3 py-2 focus:outline-none focus:border-red-500"
               >
                 <option value="">Choose an attacker...</option>
-                <option value="attacker1">Aave</option>
+                <option value="attacker1">Morpho</option>
                 <option value="attacker2">Bleeth</option>
                 <option value="attacker3">Uniswap v3</option>
               </select>
