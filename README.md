@@ -79,7 +79,7 @@ Rewards are distributed during liquidity locking period only to users that use t
 
 Contracts arch
 
-![Pyth random finalization](./schemas/rcontracts.png)
+![Pyth random finalization](./schemas/contracts.png)
 
 
 
