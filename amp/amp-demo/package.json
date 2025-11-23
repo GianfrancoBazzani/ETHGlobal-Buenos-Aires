@@ -1,0 +1,38 @@
+{
+  "name": "amp-template",
+  "description": "Template for building an Amp Dataset and ingesting the Dataset data in an application. Demos simple Amp config usage and consumption.",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "tsc -b tsconfig.json",
+    "dev": "vite",
+    "amp": "amp",
+    "studio": "amp studio --open"
+  },
+  "dependencies": {
+    "@connectrpc/connect": "^2.1.1",
+    "@connectrpc/connect-web": "^2.1.1",
+    "@edgeandnode/amp": "^0.0.51",
+    "@tailwindcss/vite": "^4.1.17",
+    "@tanstack/react-query": "^5.90.10",
+    "abitype": "^1.1.1",
+    "apache-arrow": "^21.1.0",
+    "dotenv": "^17.2.3",
+    "effect": "^3.19.4",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "tailwindcss": "^4.1.17",
+    "viem": "^2.39.0",
+    "wagmi": "^2.19.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.5",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.2"
+  },
+  "packageManager": "pnpm@10.22.0+sha512.bf049efe995b28f527fd2b41ae0474ce29186f7edcb3bf545087bd61fbbebb2bf75362d1307fda09c2d288e1e499787ac12d4fcb617a974718a6051f2eee741c"
+}
