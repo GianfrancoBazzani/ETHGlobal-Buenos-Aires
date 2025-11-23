@@ -50,8 +50,6 @@ interface IBleethMeCore {
     
     function getBet(uint256 vaPoolId, address better) external view returns (Bet memory);
 
-    // TODO Enumerated mapping
-
     // Admin Functions
     function setWhitelistRewardToken(IERC20 token, bool status) external;
 }

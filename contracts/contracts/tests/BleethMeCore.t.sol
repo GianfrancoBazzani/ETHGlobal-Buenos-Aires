@@ -28,11 +28,11 @@ contract BleethMeCoreTest is Test {
     function setUp() public {
         
         // Deploy mock ERC20 token for testing
-        rewardTokenA = new MockERC20("Reward Token A", "RTA", OWNER);
-        rewardTokenB = new MockERC20("Reward Token B", "RTB", OWNER);
-        liquidityTokenA = new MockERC20("Liquidity Token A", "LTA", OWNER);
-        liquidityTokenB = new MockERC20("Liquidity Token B", "LTB", OWNER);  
-        
+        rewardTokenA = new MockERC20("Reward Token A", "RTA");
+        rewardTokenB = new MockERC20("Reward Token B", "RTB");
+        liquidityTokenA = new MockERC20("Liquidity Token A", "LTA");
+        liquidityTokenB = new MockERC20("Liquidity Token B", "LTB");  
+
         // Deploy mock adapters
         attackerAdapter = new MockAdapter(address(bleethMeCore));
         victimAdapter = new MockAdapter(address(bleethMeCore));
@@ -46,7 +46,8 @@ contract BleethMeCoreTest is Test {
         bleethMeCore.setWhitelistRewardToken(rewardTokenA, true);
         bleethMeCore.setWhitelistRewardToken(rewardTokenB, true);
         vm.stopPrank();
-
+        
+        vm.warp(365 days);
     }
     
 
@@ -54,13 +55,23 @@ contract BleethMeCoreTest is Test {
 
         IERC20[] memory rewardTokens = new IERC20[](2);    
         rewardTokens[0] = rewardTokenA;
-        rewardTokens[1] = rewardTokenB;    
+        rewardTokens[1] = rewardTokenB;
         
-
         vm.startPrank(USER1);
+        rewardTokenA.mint(USER1, 10_000 ether);
+        rewardTokenA.approve(address(bleethMeCore), 10_000 ether);
         bleethMeCore.createVaPool(
-            
+            attackerAdapter,
+            victimAdapter,
+            rewardTokens,
+            100,
+            3 days,
+            1 days,
+            30 days,
+            block.timestamp - 30 days,
+            rewardTokenA,
+            1_000 ether
         );
-       
+        vm.stopPrank();
     }
 }

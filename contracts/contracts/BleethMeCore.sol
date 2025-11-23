@@ -28,6 +28,7 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
 
     uint256 constant MINIMUM_INITIAL_BET = 0;
     uint256 constant INVALIDATION_WINDOW = 1 hours;
+    uint256 constant PENALIZATION_BPS = 100_00;
 
     mapping(uint256 => VAPool) public vaPools;
     mapping(IERC20 => bool) public whitelistedRewardTokens;
@@ -61,13 +62,14 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
         vaPools[vaPoolCount].snapshotLookupTimestamp = snapshotLookupTimestamp;
         vaPools[vaPoolCount].state = VAPoolState.BETTING;
 
+
         // Set reward tokens
         uint256 length = rewardTokens.length;
         for (uint256 i = 0; i < length; i++) {
             require(whitelistedRewardTokens[rewardTokens[i]], RewardTokenNotWhitelisted());
             vaPools[vaPoolCount].rewardTokens[rewardTokens[i]] = true;
         }
-
+        
         // Place initial bet
         require(initialBetAmount >= MINIMUM_INITIAL_BET, InsufficientBetAmount());
         require(whitelistedRewardTokens[initialBetToken], RewardTokenNotWhitelisted());
@@ -133,9 +135,11 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
             vaPools[vaPoolId].totalBetAgainst[token] += amount;
         }
 
-      if (block.timestamp + INVALIDATION_WINDOW >= vaPools[vaPoolId].auctionEndTimestamp) {
+        if (block.timestamp + INVALIDATION_WINDOW >= vaPools[vaPoolId].auctionEndTimestamp) {
             vaPools[vaPoolId].invalidatableBetters.push(msg.sender);
         }
+
+        token.transferFrom(msg.sender, address(this), amount);
 
         emit BetPlaced(bytes32(vaPoolId), msg.sender);
     }
