@@ -1,4 +1,6 @@
-# ETHGlobal Buenos Aires 2025 - bleeth.me
+# bleeth.me - ETHGlobal Buenos Aires 2025
+
+![Bleeth Logo](./Bleeth.png)
 
 Protocol that allows the creation of liquidity vampire attack on other protocols by incentivizing users with rewards if they migrate from a victim protocol to an attacker one. In exchange, users have to lock their liquidity for a certain period of time in order to obtain liquidity provision that cannot be considered mercenary liquidity.
 
