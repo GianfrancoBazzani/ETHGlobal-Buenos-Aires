@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useAccount } from "wagmi";
-import { type Address } from "viem";
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { type Address, parseUnits } from "viem";
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import useInput from "../hooks/useInput";
+import { bleethMeCoreAbi, bleethMeCoreAddress } from "../config/contracts";
+import TransactionModal from "./TransactionModal";
 
 interface AttackProps {
   onBack: () => void;
@@ -18,11 +20,37 @@ export default function Attack({ onBack }: AttackProps) {
   const [selectedToken, setSelectedToken] = useState("");
   const [lockPeriod, setLockPeriod] = useState("");
   const [penalizationCoefficient, setPenalizationCoefficient] = useState("");
+  const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const [transactionStatus, setTransactionStatus] = useState<"idle" | "pending" | "success" | "error">("idle");
+  const [transactionError, setTransactionError] = useState<string>("");
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const amountInput = useInput("", selectedToken as Address);
 
+  // Wagmi hooks for contract interaction
+  const { data: hash, writeContract, isPending, error } = useWriteContract();
+
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash,
+  });
+
   const stepTimestamps = [0, 1, 2, 3, 9];
+
+  // Monitor transaction status
+  useEffect(() => {
+    if (isPending) {
+      setTransactionStatus("pending");
+      setShowTransactionModal(true);
+    } else if (isConfirming) {
+      setTransactionStatus("pending");
+    } else if (isConfirmed) {
+      setTransactionStatus("success");
+    } else if (error) {
+      setTransactionStatus("error");
+      setTransactionError(error.message || "Transaction failed");
+      setShowTransactionModal(true);
+    }
+  }, [isPending, isConfirming, isConfirmed, error]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -58,23 +86,66 @@ export default function Attack({ onBack }: AttackProps) {
     }
   };
 
+  // Protocol address mappings (replace with actual deployed addresses)
+  const protocolAddresses: Record<string, Address> = {
+    "target1": "0x0000000000000000000000000000000000000001" as Address, // Aave
+    "target2": "0x0000000000000000000000000000000000000002" as Address, // Bleeth
+    "target3": "0x0000000000000000000000000000000000000003" as Address, // Uniswap v3
+    "attacker1": "0x0000000000000000000000000000000000000004" as Address, // Morpho
+    "attacker2": "0x0000000000000000000000000000000000000005" as Address, // Bleeth
+    "attacker3": "0x0000000000000000000000000000000000000006" as Address, // Uniswap v3
+  };
+
   const handleSubmit = () => {
-    // Convert lock period from weeks to unix timestamp
-    const weeks = parseFloat(lockPeriod) || 0;
-    const secondsInWeek = 7 * 24 * 60 * 60;
-    const lockPeriodTimestamp = Math.floor(Date.now() / 1000) + (weeks * secondsInWeek);
-    
-    // Convert penalization coefficient from percentage (0-100) to contract value (0-100)
-    const penalizationValue = parseFloat(penalizationCoefficient) || 0;
-    
-    console.log("Attack submitted:", {
-      target: selectedTarget,
-      attacker: selectedAttacker,
-      token: selectedToken,
-      amount: amountInput.value,
-      lockPeriod: lockPeriodTimestamp, // Unix timestamp
-      penalizationCoefficient: penalizationValue, // 0-100
-    });
+    try {
+      // Convert lock period from weeks to seconds
+      const weeks = parseFloat(lockPeriod) || 0;
+      const secondsInWeek = 7 * 24 * 60 * 60;
+      const lockDurationSeconds = BigInt(weeks * secondsInWeek);
+
+      // Convert penalization coefficient from percentage (0-100) to contract value
+      const penalizationValue = BigInt(parseFloat(penalizationCoefficient) || 0);
+
+      // Get protocol addresses
+      const attackerAddress = protocolAddresses[selectedAttacker];
+      const victimAddress = protocolAddresses[selectedTarget];
+
+      // Default values for other parameters (adjust as needed)
+      const auctionDuration = BigInt(3600); // 1 hour in seconds
+      const liquidityMigrationDelay = BigInt(86400); // 1 day in seconds
+      const snapshotLookupTimestamp = BigInt(Math.floor(Date.now() / 1000)); // Current timestamp
+
+      // Reward tokens - using the selected token
+      const rewardTokens = [selectedToken as Address];
+
+      // Parse the amount based on token decimals (assuming 18 for most tokens, 6 for USDC)
+      const decimals = selectedToken === "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" ? 6 : 18;
+      const initialBetAmount = parseUnits(amountInput.value, decimals);
+
+      // Call the contract
+      writeContract({
+        address: bleethMeCoreAddress as Address,
+        abi: bleethMeCoreAbi,
+        functionName: "createVaPool",
+        args: [
+          attackerAddress,
+          victimAddress,
+          rewardTokens,
+          penalizationValue,
+          auctionDuration,
+          liquidityMigrationDelay,
+          lockDurationSeconds,
+          snapshotLookupTimestamp,
+          selectedToken as Address,
+          initialBetAmount,
+        ],
+      });
+    } catch (err) {
+      console.error("Error submitting transaction:", err);
+      setTransactionStatus("error");
+      setTransactionError(err instanceof Error ? err.message : "Unknown error");
+      setShowTransactionModal(true);
+    }
   };
 
   const canProceed = () => {
@@ -345,6 +416,19 @@ export default function Attack({ onBack }: AttackProps) {
           )}
         </div>
       </div>
+
+      {/* Transaction Modal */}
+      <TransactionModal
+        isOpen={showTransactionModal}
+        onClose={() => {
+          setShowTransactionModal(false);
+          setTransactionStatus("idle");
+          setTransactionError("");
+        }}
+        status={transactionStatus}
+        txHash={hash}
+        errorMessage={transactionError}
+      />
     </div>
   );
 }
