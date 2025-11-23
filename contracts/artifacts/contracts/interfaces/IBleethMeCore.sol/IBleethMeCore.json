@@ -5,6 +5,11 @@
   "abi": [
     {
       "inputs": [],
+      "name": "BetAlreadyPlaced",
+      "type": "error"
+    },
+    {
+      "inputs": [],
       "name": "BettingPeriodClosed",
       "type": "error"
     },
@@ -236,6 +241,19 @@
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "vaPoolId",
+          "type": "uint256"
+        }
+      ],
+      "name": "withdrawFailedBet",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
     }
   ],
   "bytecode": "0x",
@@ -244,5 +262,5 @@
   "deployedLinkReferences": {},
   "immutableReferences": {},
   "inputSourceName": "project/contracts/interfaces/IBleethMeCore.sol",
-  "buildInfoId": "solc-0_8_28-4d20e34aba7673b699448cf5197648a0c6e9bbf1"
+  "buildInfoId": "solc-0_8_28-84d7b432929a4f7627c6b4134d75c2115d2bebe0"
 }

@@ -8,6 +8,9 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IEntropyV2} from "@pythnetwork/entropy-sdk-solidity/IEntropyV2.sol";
 import {IEntropyConsumer} from "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
 
+import {IPyth} from "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
+import {PythStructs} from  "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
+
 contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
 
     struct VAPool {
@@ -24,6 +27,14 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
         mapping(IERC20 => uint256) totalBetAgainst;
         address[] invalidatableBetters;
         VAPoolState state;
+    }
+
+    struct VAStream {
+        bytes32 balancesMerkleRoot;
+        IBaseAdapter liquidityOrigin;
+        IBaseAdapter liquidityDestination;
+        uint256 totalRewards;
+
     }
 
     uint256 constant MINIMUM_INITIAL_BET = 0;
@@ -82,6 +93,10 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
         _placeBet(vaPoolId, side, token, amount);
     }
 
+    function withdrawFailedBet(uint256 vaPoolId) external {
+        // TODO
+    }
+
     function finalizeBetting(uint256 vaPoolId) external payable {
         require(block.timestamp >= vaPools[vaPoolId].auctionEndTimestamp, "not finalized");
         uint128 requestFee = entropy.getFeeV2();
@@ -108,20 +123,28 @@ contract BleethMeCore is IBleethMeCore, IEntropyConsumer, Ownable {
 
         emit RewardTokenWhitelisted(address(token), status);
     }
+
+    function finalizeBettingPeriod(uint256 vaPoolId) external onlyOwner {
+        require(vaPools[vaPoolId].state == VAPoolState.BETTING, BettingPeriodClosed());
+        vaPools[vaPoolId].state = VAPoolState.MIGRATION;
+    }
     
     // View functions
     function getBet(uint256 vaPoolId, address better) external view returns (Bet memory) {
         return vaPools[vaPoolId].bets[better];
     }
 
-    function computeTotalBets(uint256 vaPoolId) public view returns (uint256 totalFor, uint256 totalAgainst) {}
+    function computeTotalBets(uint256 vaPoolId) public view returns (uint256 totalFor, uint256 totalAgainst) {
+        
+    }
 
 
     // Private functions
     function _placeBet(uint256 vaPoolId, BetSide side, IERC20 token, uint256 amount) private {
 
         require(vaPools[vaPoolId].state == VAPoolState.BETTING, BettingPeriodClosed());
-        require(vaPools[vaPoolId].rewardTokens[token], BettingPeriodClosed());
+        require(vaPools[vaPoolId].rewardTokens[token], RewardTokenNotWhitelisted());
+        require(vaPools[vaPoolId].bets[msg.sender].amount == 0, BetAlreadyPlaced());
 
         vaPools[vaPoolId].bets[msg.sender] = Bet({
             side: side,

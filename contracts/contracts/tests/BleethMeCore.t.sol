@@ -10,6 +10,9 @@ import {MockAdapter} from "./mocks/MockAdapter.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract BleethMeCoreTest is Test {
+    // Fork
+    uint256 baseFork;
+
     // Contracts
     BleethMeCore bleethMeCore;
     
@@ -26,6 +29,10 @@ contract BleethMeCoreTest is Test {
     address constant USER1 = address(0x1111);
 
     function setUp() public {
+        // Select Fork
+        baseFork = vm.createFork("wss://base-rpc.publicnode.com");
+        vm.selectFork(baseFork);
+
         
         // Deploy mock ERC20 token for testing
         rewardTokenA = new MockERC20("Reward Token A", "RTA");
@@ -46,8 +53,6 @@ contract BleethMeCoreTest is Test {
         bleethMeCore.setWhitelistRewardToken(rewardTokenA, true);
         bleethMeCore.setWhitelistRewardToken(rewardTokenB, true);
         vm.stopPrank();
-        
-        vm.warp(365 days);
     }
     
 
@@ -73,5 +78,7 @@ contract BleethMeCoreTest is Test {
             1_000 ether
         );
         vm.stopPrank();
+
+        console.log(block.timestamp);
     }
 }
