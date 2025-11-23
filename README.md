@@ -1,7 +1,7 @@
 # bleeth.me - ETHGlobal Buenos Aires 2025
 
 
-![Bleeth Logo](./bleeth-frontend/public/bleeth.gif)
+![Bleeth Logo](./bleeth-frontend/public/bleeth-02.gif)
 
 Bleeth.me is a cornerstone protocol that systematizes the DeFi liquidity wars while enabling DeFi protocols to reduce their reliance on mercenary liquidity. Its core mechanic is built around Vampire Attack (VA) Pools. A VA Pool can be created permissionlessly by anyone to initiate a deliberately targeted liquidity-stealing attack against a competitor protocol. Additionally, to protect against mercenary liquidity, a configurable lockup period can be specified to ensure that the funds remain deposited as liquidity in the destination protocol for a predetermined amount of time.
 
