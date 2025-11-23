@@ -54,16 +54,15 @@ Possible outcomes:
 The funds on the winning side will be used to be payed as rewards to the users that participate in the liquidity migration.
 The funds on the losing side will be returned to the loser betters minus a penalization that will be accounted to the winning side. 
 
-### Auction Resolution Front Run Protection
+In order to prevent **sniping** (Last-minute bidding), the betting period finalization time is randomized using Pyth Entropy in a time window close to the finalization time specified by the user.
 
-In order to prevent Sniping (Last-minute bidding), the betting period finalization time is randomized using Pyth Entropy in a time window close to the finalization time specified by the user.
-
+![Pyth random finalization](./schemas/random-betting-finalization-time.png)
 
 ### Incentives
 
-Liquidity searchers: Actors that see value on migrate and lock liquidity.
+Liquidity searchers: Actors that see value on migrate and lock liquidity (Protocols Ecosystems or Fandom community).
 
-Liquidity Pro: Actors that held liquidity.
+Liquidity Pro: Actors that held liquidity (Victim protocol users).
 
 ### Rewards Distribution
 
